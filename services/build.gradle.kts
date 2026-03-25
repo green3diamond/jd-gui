@@ -18,7 +18,7 @@ tasks.withType<AntlrTask>().configureEach {
 dependencies {
     implementation("com.fifesoft:rsyntaxtextarea:3.4.0")
     implementation("org.ow2.asm:asm:9.7")
-    implementation("io.github.nbauma109:jd-core-v0:0.8.29")
+    implementation("io.github.nbauma109:jd-core:1.3.3")
     implementation(project(":api"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
     antlr("org.antlr:antlr4:4.13.1")

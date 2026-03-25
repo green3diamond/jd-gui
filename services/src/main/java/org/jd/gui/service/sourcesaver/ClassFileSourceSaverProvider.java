@@ -7,7 +7,7 @@
 
 package org.jd.gui.service.sourcesaver;
 
-import org.jd.core.v1.ClassFileToJavaSourceDecompiler;
+import org.jd.core.ClassFileToJavaSourceDecompiler;
 import org.jd.gui.api.API;
 import org.jd.gui.api.model.Container;
 import org.jd.gui.util.decompiler.ContainerLoader;
