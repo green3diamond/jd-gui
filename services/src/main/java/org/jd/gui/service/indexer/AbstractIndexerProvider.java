@@ -82,10 +82,10 @@ public abstract class AbstractIndexerProvider implements Indexer {
     @SuppressWarnings("unchecked")
     protected static void addToIndexes(Indexes indexes, String indexName, Set<String> set, Container.Entry entry) {
         if (set.size() > 0) {
-            Map<String, Collection> index = indexes.getIndex(indexName);
+            Map<String, Collection<?>> index = indexes.getIndex(indexName);
 
             for (String key : set) {
-                index.get(key).add(entry);
+                ((Collection<Object>) index.get(key)).add(entry);
             }
         }
     }

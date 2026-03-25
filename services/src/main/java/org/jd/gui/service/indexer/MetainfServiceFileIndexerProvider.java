@@ -28,7 +28,7 @@ public class MetainfServiceFileIndexerProvider extends AbstractIndexerProvider {
     @Override
     @SuppressWarnings("unchecked")
     public void index(API api, Container.Entry entry, Indexes indexes) {
-        Map<String, Collection> index = indexes.getIndex("typeReferences");
+        Map<String, Collection<?>> index = indexes.getIndex("typeReferences");
 
         try (BufferedReader br = new BufferedReader(new InputStreamReader(entry.getInputStream()))) {
             String line;
@@ -39,7 +39,7 @@ public class MetainfServiceFileIndexerProvider extends AbstractIndexerProvider {
                 if (!trim.isEmpty() && (trim.charAt(0) != '#')) {
                     String internalTypeName = trim.replace(".", "/");
 
-                    index.get(internalTypeName).add(entry);
+                    ((Collection<Object>) index.get(internalTypeName)).add(entry);
                 }
             }
         } catch (IOException e) {

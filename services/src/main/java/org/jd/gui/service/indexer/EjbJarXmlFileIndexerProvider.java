@@ -30,7 +30,7 @@ public class EjbJarXmlFileIndexerProvider extends XmlBasedFileIndexerProvider {
 
     public static class EjbJarXmlPathFinder extends AbstractXmlPathFinder {
         protected Container.Entry entry;
-        protected Map<String, Collection> index;
+        protected Map<String, Collection<?>> index;
 
         public EjbJarXmlPathFinder(Container.Entry entry, Indexes indexes) {
             super(Arrays.asList(
@@ -69,7 +69,7 @@ public class EjbJarXmlFileIndexerProvider extends XmlBasedFileIndexerProvider {
         @Override
         @SuppressWarnings("unchecked")
         public void handle(String path, String text, int position) {
-            index.get(text.replace(".", "/")).add(entry);
+            ((Collection<Object>) index.get(text.replace(".", "/"))).add(entry);
         }
     }
 }

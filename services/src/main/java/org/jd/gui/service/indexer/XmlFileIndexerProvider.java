@@ -112,18 +112,18 @@ public class XmlFileIndexerProvider extends AbstractIndexerProvider {
             }
         }
 
-        Map<String, Collection> stringIndex = indexes.getIndex("strings");
-        Map<String, Collection> typeReferenceIndex = indexes.getIndex("typeReferences");
+        Map<String, Collection<?>> stringIndex = indexes.getIndex("strings");
+        Map<String, Collection<?>> typeReferenceIndex = indexes.getIndex("typeReferences");
 
         for (String string : stringSet) {
             if ((string != null) && !string.isEmpty()) {
-                stringIndex.get(string).add(entry);
+                ((Collection<Object>) stringIndex.get(string)).add(entry);
             }
         }
 
         for (String ref : typeReferenceSet) {
             if ((ref != null) && !ref.isEmpty()) {
-                typeReferenceIndex.get(ref).add(entry);
+                ((Collection<Object>) typeReferenceIndex.get(ref)).add(entry);
             }
         }
     }

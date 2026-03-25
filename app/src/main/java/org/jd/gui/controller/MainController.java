@@ -13,6 +13,8 @@ import org.jd.gui.api.model.Container;
 import org.jd.gui.api.model.Indexes;
 import org.jd.gui.model.configuration.Configuration;
 import org.jd.gui.model.history.History;
+import org.jd.gui.service.FileLoadingService;
+import org.jd.gui.service.PreferencesManager;
 import org.jd.gui.service.actions.ContextualActionsFactoryService;
 import org.jd.gui.service.container.ContainerFactoryService;
 import org.jd.gui.service.fileloader.FileLoaderService;
@@ -67,6 +69,9 @@ public class MainController implements API {
     protected AboutController aboutController;
     protected SourceLoaderService sourceLoaderService;
 
+    private FileLoadingService fileLoadingService;
+    private final PreferencesManager preferencesManager;
+
     protected History history = new History();
     protected JComponent currentPage = null;
     protected ScheduledExecutorService executor = Executors.newScheduledThreadPool(2);
@@ -75,6 +80,7 @@ public class MainController implements API {
     @SuppressWarnings("unchecked")
     public MainController(Configuration configuration) {
         this.configuration = configuration;
+        this.preferencesManager = new PreferencesManager(configuration);
 
         SwingUtil.invokeLater(() -> {
             if (PlatformService.getInstance().isLinux()) {
@@ -112,6 +118,7 @@ public class MainController implements API {
                 () -> panelClosed(),
                 page -> onCurrentPageChanged((JComponent)page),
                 file -> openFile((File)file));
+            fileLoadingService = new FileLoadingService(MainController.this, configuration, mainView);
         });
 	}
 
@@ -404,77 +411,21 @@ public class MainController implements API {
     }
 
     protected void checkPreferencesChange(JComponent page) {
-        if (page instanceof PreferencesChangeListener) {
-            Map<String, String> preferences = configuration.getPreferences();
-            Integer currentHashcode = Integer.valueOf(preferences.hashCode());
-            Integer lastHashcode = (Integer)page.getClientProperty("preferences-hashCode");
-
-            if (!currentHashcode.equals(lastHashcode)) {
-                ((PreferencesChangeListener)page).preferencesChanged(preferences);
-                page.putClientProperty("preferences-hashCode", currentHashcode);
-            }
-        }
+        preferencesManager.checkPreferencesChange(page);
     }
 
     protected void checkIndexesChange(JComponent page) {
-        if (page instanceof IndexesChangeListener) {
-            Collection<Future<Indexes>> collectionOfFutureIndexes = getCollectionOfFutureIndexes();
-            Integer currentHashcode = Integer.valueOf(collectionOfFutureIndexes.hashCode());
-            Integer lastHashcode = (Integer)page.getClientProperty("collectionOfFutureIndexes-hashCode");
-
-            if (!currentHashcode.equals(lastHashcode)) {
-                ((IndexesChangeListener)page).indexesChanged(collectionOfFutureIndexes);
-                page.putClientProperty("collectionOfFutureIndexes-hashCode", currentHashcode);
-            }
-        }
+        preferencesManager.checkIndexesChange(page, getCollectionOfFutureIndexes());
     }
 
     // --- Operations --- //
     public void openFile(File file) {
-        openFiles(Collections.singletonList(file));
+        fileLoadingService.openFile(file);
     }
 
     @SuppressWarnings("unchecked")
     public void openFiles(List<File> files) {
-        ArrayList<String> errors = new ArrayList<>();
-
-        for (File file : files) {
-            // Check input file
-            if (file.exists()) {
-                FileLoader loader = getFileLoader(file);
-                if ((loader != null) && !loader.accept(this, file)) {
-                    errors.add("Invalid input fileloader: '" + file.getAbsolutePath() + "'");
-                }
-            } else {
-                errors.add("File not found: '" + file.getAbsolutePath() + "'");
-            }
-        }
-
-        if (errors.isEmpty()) {
-            for (File file : files) {
-                if (openURI(file.toURI())) {
-                    configuration.addRecentFile(file);
-                    mainView.updateRecentFilesMenu(configuration.getRecentFiles());
-                }
-            }
-        } else {
-            StringBuilder messages = new StringBuilder();
-            int index = 0;
-
-            for (String error : errors) {
-                if (index > 0) {
-                    messages.append('\n');
-                }
-                if (index >= 20) {
-                    messages.append("...");
-                    break;
-                }
-                messages.append(error);
-                index++;
-            }
-
-            JOptionPane.showMessageDialog(mainView.getMainFrame(), messages.toString(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
+        fileLoadingService.openFiles(files);
     }
 
     // --- Drop files transfer handler --- //

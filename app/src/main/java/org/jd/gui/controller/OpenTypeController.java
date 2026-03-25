@@ -37,7 +37,7 @@ public class OpenTypeController implements IndexesChangeListener {
     protected SelectLocationController selectLocationController;
 
     protected long indexesHashCode = 0L;
-    protected Map<String, Map<String, Collection>> cache;
+    protected Map<String, Map<String, Collection<?>>> cache;
 
     public OpenTypeController(API api, ScheduledExecutorService executor, JFrame mainFrame) {
         this.api = api;
@@ -47,9 +47,9 @@ public class OpenTypeController implements IndexesChangeListener {
         openTypeView = new OpenTypeView(api, mainFrame, this::updateList, this::onTypeSelected);
         selectLocationController = new SelectLocationController(api, mainFrame);
         // Create result cache
-        cache = new LinkedHashMap<String, Map<String, Collection>>(CACHE_MAX_ENTRIES*3/2, 0.7f, true) {
+        cache = new LinkedHashMap<String, Map<String, Collection<?>>>(CACHE_MAX_ENTRIES*3/2, 0.7f, true) {
             @Override
-            protected boolean removeEldestEntry(Map.Entry<String, Map<String, Collection>> eldest) {
+            protected boolean removeEldestEntry(Map.Entry<String, Map<String, Collection<?>>> eldest) {
                 return size() > CACHE_MAX_ENTRIES;
             }
         };
@@ -90,20 +90,20 @@ public class OpenTypeController implements IndexesChangeListener {
                         if (futureIndexes.isDone()) {
                             Indexes indexes = futureIndexes.get();
                             String key = String.valueOf(indexes.hashCode()) + "***" + pattern;
-                            Map<String, Collection> matchingEntries = cache.get(key);
+                            Map<String, Collection<?>> matchingEntries = cache.get(key);
 
                             if (matchingEntries != null) {
                                 // Merge 'result' and 'matchingEntries'
-                                for (Map.Entry<String, Collection> mapEntry : matchingEntries.entrySet()) {
+                                for (Map.Entry<String, Collection<?>> mapEntry : matchingEntries.entrySet()) {
                                     Collection<Container.Entry> collection = result.get(mapEntry.getKey());
                                     if (collection == null) {
                                         result.put(mapEntry.getKey(), collection = new HashSet<>());
                                     }
-                                    collection.addAll(mapEntry.getValue());
+                                    collection.addAll((Collection<? extends Container.Entry>) mapEntry.getValue());
                                 }
                             } else {
                                 // Waiting the end of indexation...
-                                Map<String, Collection> index = indexes.getIndex("typeDeclarations");
+                                Map<String, Collection<?>> index = indexes.getIndex("typeDeclarations");
 
                                 if ((index != null) && !index.isEmpty()) {
                                     matchingEntries = new HashMap<>();
@@ -113,7 +113,7 @@ public class OpenTypeController implements IndexesChangeListener {
                                         match(pattern.charAt(0), index, matchingEntries);
                                     } else {
                                         String lastKey = key.substring(0, patternLength - 1);
-                                        Map<String, Collection> lastResult = cache.get(lastKey);
+                                        Map<String, Collection<?>> lastResult = cache.get(lastKey);
 
                                         if (lastResult != null) {
                                             match(regExpPattern, lastResult, matchingEntries);
@@ -126,12 +126,12 @@ public class OpenTypeController implements IndexesChangeListener {
                                     cache.put(key, matchingEntries);
 
                                     // Merge 'result' and 'matchingEntries'
-                                    for (Map.Entry<String, Collection> mapEntry : matchingEntries.entrySet()) {
+                                    for (Map.Entry<String, Collection<?>> mapEntry : matchingEntries.entrySet()) {
                                         Collection<Container.Entry> collection = result.get(mapEntry.getKey());
                                         if (collection == null) {
                                             result.put(mapEntry.getKey(), collection = new HashSet<>());
                                         }
-                                        collection.addAll(mapEntry.getValue());
+                                        collection.addAll((Collection<? extends Container.Entry>) mapEntry.getValue());
                                     }
                                 }
                             }
@@ -151,14 +151,14 @@ public class OpenTypeController implements IndexesChangeListener {
     }
 
     @SuppressWarnings("unchecked")
-    protected static void match(char c, Map<String, Collection> index, Map<String, Collection> result) {
+    protected static void match(char c, Map<String, Collection<?>> index, Map<String, Collection<?>> result) {
         // Filter
         if (Character.isLowerCase(c)) {
             char upperCase = Character.toUpperCase(c);
 
-            for (Map.Entry<String, Collection> mapEntry : index.entrySet()) {
+            for (Map.Entry<String, Collection<?>> mapEntry : index.entrySet()) {
                 String typeName = mapEntry.getKey();
-                Collection<Container.Entry> entries = mapEntry.getValue();
+                Collection<?> entries = mapEntry.getValue();
                 // Search last package separator
                 int lastPackageSeparatorIndex = typeName.lastIndexOf('/') + 1;
                 int lastTypeNameSeparatorIndex = typeName.lastIndexOf('$') + 1;
@@ -173,9 +173,9 @@ public class OpenTypeController implements IndexesChangeListener {
                 }
             }
         } else {
-            for (Map.Entry<String, Collection> mapEntry : index.entrySet()) {
+            for (Map.Entry<String, Collection<?>> mapEntry : index.entrySet()) {
                 String typeName = mapEntry.getKey();
-                Collection<Container.Entry> entries = mapEntry.getValue();
+                Collection<?> entries = mapEntry.getValue();
                 // Search last package separator
                 int lastPackageSeparatorIndex = typeName.lastIndexOf('/') + 1;
                 int lastTypeNameSeparatorIndex = typeName.lastIndexOf('$') + 1;
@@ -227,10 +227,10 @@ public class OpenTypeController implements IndexesChangeListener {
     }
 
     @SuppressWarnings("unchecked")
-    protected static void match(Pattern regExpPattern, Map<String, Collection> index, Map<String, Collection> result) {
-        for (Map.Entry<String, Collection> mapEntry : index.entrySet()) {
+    protected static void match(Pattern regExpPattern, Map<String, Collection<?>> index, Map<String, Collection<?>> result) {
+        for (Map.Entry<String, Collection<?>> mapEntry : index.entrySet()) {
             String typeName = mapEntry.getKey();
-            Collection<Container.Entry> entries = mapEntry.getValue();
+            Collection<?> entries = mapEntry.getValue();
             // Search last package separator
             int lastPackageSeparatorIndex = typeName.lastIndexOf('/') + 1;
             int lastTypeNameSeparatorIndex = typeName.lastIndexOf('$') + 1;
@@ -243,14 +243,15 @@ public class OpenTypeController implements IndexesChangeListener {
     }
 
     @SuppressWarnings("unchecked")
-    protected static void add(Map<String, Collection> map, String key, Collection value) {
-        Collection<Container.Entry> collection = map.get(key);
+    protected static void add(Map<String, Collection<?>> map, String key, Collection<?> value) {
+        @SuppressWarnings("unchecked")
+        Collection<Container.Entry> collection = (Collection<Container.Entry>) map.get(key);
 
         if (collection == null) {
             map.put(key, collection = new HashSet<>());
         }
 
-        collection.addAll(value);
+        collection.addAll((Collection<? extends Container.Entry>) value);
     }
 
     protected void onTypeSelected(Point leftBottom, Collection<Container.Entry> entries, String typeName) {

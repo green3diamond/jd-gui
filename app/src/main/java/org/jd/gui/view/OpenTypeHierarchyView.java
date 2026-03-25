@@ -372,9 +372,10 @@ public class OpenTypeHierarchyView {
         try {
             for (Future<Indexes> futureIndexes : collectionOfFutureIndexes) {
                 if (futureIndexes.isDone()) {
-                    Map<String, Collection> subTypeNames = futureIndexes.get().getIndex("subTypeNames");
+                    Map<String, Collection<?>> subTypeNames = futureIndexes.get().getIndex("subTypeNames");
                     if (subTypeNames != null) {
-                        Collection<String> collection = subTypeNames.get(typeName);
+                        @SuppressWarnings("unchecked")
+                        Collection<String> collection = (Collection<String>) subTypeNames.get(typeName);
                         if (collection != null) {
                             for (String tn : collection) {
                                 if (tn != null) {
@@ -399,9 +400,10 @@ public class OpenTypeHierarchyView {
         try {
             for (Future<Indexes> futureIndexes : collectionOfFutureIndexes) {
                 if (futureIndexes.isDone()) {
-                    Map<String, Collection> typeDeclarations = futureIndexes.get().getIndex("typeDeclarations");
+                    Map<String, Collection<?>> typeDeclarations = futureIndexes.get().getIndex("typeDeclarations");
                     if (typeDeclarations != null) {
-                        Collection<Container.Entry> collection = typeDeclarations.get(typeName);
+                        @SuppressWarnings("unchecked")
+                        Collection<Container.Entry> collection = (Collection<Container.Entry>) typeDeclarations.get(typeName);
                         if (collection != null) {
                             for (Container.Entry e : collection) {
                                 if (e != null) {

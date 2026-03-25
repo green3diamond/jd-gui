@@ -146,10 +146,10 @@ public class ClassFileIndexerProvider extends AbstractIndexerProvider {
 
             // Populate map [super type name : [sub type name]]
             if (superTypeNameSet.size() > 0) {
-                Map<String, Collection> index = indexes.getIndex("subTypeNames");
+                Map<String, Collection<?>> index = indexes.getIndex("subTypeNames");
 
                 for (String superTypeName : superTypeNameSet) {
-                    index.get(superTypeName).add(typeName);
+                    ((Collection<Object>) index.get(superTypeName)).add(typeName);
                 }
             }
         } catch (Exception e) {

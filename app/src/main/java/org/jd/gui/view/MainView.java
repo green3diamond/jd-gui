@@ -25,7 +25,6 @@ import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.io.File;
@@ -49,7 +48,7 @@ public class MainView<T extends JComponent & UriGettable> implements UriOpenable
     protected Action forwardAction;
     protected MainTabbedPanel mainTabbedPanel;
     protected Box findPanel;
-    protected JComboBox findComboBox;
+    protected JComboBox<String> findComboBox;
     protected JCheckBox findCaseSensitive;
     protected Color findBackgroundColor;
     protected Color findErrorBackgroundColor;
@@ -97,7 +96,7 @@ public class MainView<T extends JComponent & UriGettable> implements UriOpenable
             findPanel = Box.createHorizontalBox();
             findPanel.setVisible(false);
             findPanel.add(new JLabel("Find: "));
-            findComboBox = new JComboBox();
+            findComboBox = new JComboBox<>();
             findComboBox.setEditable(true);
             JComponent editorComponent = (JComponent)findComboBox.getEditor().getEditorComponent();
             editorComponent.addKeyListener(new KeyAdapter() {
@@ -112,7 +111,7 @@ public class MainView<T extends JComponent & UriGettable> implements UriOpenable
                         case KeyEvent.VK_ENTER:
                             String str = getFindText();
                             if (str.length() > 1) {
-                                int index = ((DefaultComboBoxModel)findComboBox.getModel()).getIndexOf(str);
+                                int index = ((DefaultComboBoxModel<String>)findComboBox.getModel()).getIndexOf(str);
                                 if(index != -1 ) {
                                     findComboBox.removeItemAt(index);
                                 }
@@ -194,55 +193,13 @@ public class MainView<T extends JComponent & UriGettable> implements UriOpenable
             Action aboutAction = newAction("About...", true, "About JD-GUI", aboutActionListener);
 
             // Menu //
-            int menuShortcutKeyMask = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
-            JMenuBar menuBar = new JMenuBar();
-            JMenu menu = new JMenu("File");
-            menuBar.add(menu);
-            menu.add(openAction).setAccelerator(KeyStroke.getKeyStroke('O', menuShortcutKeyMask));
-            menu.addSeparator();
-            menu.add(closeAction).setAccelerator(KeyStroke.getKeyStroke('W', menuShortcutKeyMask));
-            menu.addSeparator();
-            menu.add(saveAction).setAccelerator(KeyStroke.getKeyStroke('S', menuShortcutKeyMask));
-            menu.add(saveAllSourcesAction).setAccelerator(KeyStroke.getKeyStroke('S', menuShortcutKeyMask|InputEvent.ALT_MASK));
-            menu.addSeparator();
-            menu.add(recentFiles);
-            if (!PlatformService.getInstance().isMac()) {
-                menu.addSeparator();
-                menu.add(exitAction).setAccelerator(KeyStroke.getKeyStroke('X', InputEvent.ALT_MASK));
-            }
-            menu = new JMenu("Edit");
-            menuBar.add(menu);
-            menu.add(copyAction).setAccelerator(KeyStroke.getKeyStroke('C', menuShortcutKeyMask));
-            menu.add(pasteAction).setAccelerator(KeyStroke.getKeyStroke('V', menuShortcutKeyMask));
-            menu.addSeparator();
-            menu.add(selectAllAction).setAccelerator(KeyStroke.getKeyStroke('A', menuShortcutKeyMask));
-            menu.addSeparator();
-            menu.add(findAction).setAccelerator(KeyStroke.getKeyStroke('F', menuShortcutKeyMask));
-            menu = new JMenu("Navigation");
-            menuBar.add(menu);
-            menu.add(openTypeAction).setAccelerator(KeyStroke.getKeyStroke('T', menuShortcutKeyMask));
-            menu.add(openTypeHierarchyAction).setAccelerator(KeyStroke.getKeyStroke('H', menuShortcutKeyMask));
-            menu.addSeparator();
-            menu.add(goToAction).setAccelerator(KeyStroke.getKeyStroke('L', menuShortcutKeyMask));
-            menu.addSeparator();
-            menu.add(backwardAction).setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, InputEvent.ALT_MASK));
-            menu.add(forwardAction).setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, InputEvent.ALT_MASK));
-            menu = new JMenu("Search");
-            menuBar.add(menu);
-            menu.add(searchAction).setAccelerator(KeyStroke.getKeyStroke('S', menuShortcutKeyMask|InputEvent.SHIFT_MASK));
-            menu = new JMenu("Help");
-            menuBar.add(menu);
-            if (browser) {
-                menu.add(jdWebSiteAction);
-                menu.add(jdGuiIssuesActionAction);
-                menu.add(jdCoreIssuesActionAction);
-                menu.addSeparator();
-            }
-            menu.add(preferencesAction).setAccelerator(KeyStroke.getKeyStroke('P', menuShortcutKeyMask|InputEvent.SHIFT_MASK));
-            if (!PlatformService.getInstance().isMac()) {
-                menu.addSeparator();
-                menu.add(aboutAction).setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_F1, 0));
-            }
+            JMenuBar menuBar = MenuBuilder.buildMenuBar(
+                    openAction, closeAction, saveAction, saveAllSourcesAction, exitAction,
+                    copyAction, pasteAction, selectAllAction, findAction,
+                    openTypeAction, openTypeHierarchyAction, goToAction,
+                    backwardAction, forwardAction, searchAction,
+                    jdWebSiteAction, jdGuiIssuesActionAction, jdCoreIssuesActionAction,
+                    preferencesAction, aboutAction, recentFiles, browser);
             mainFrame.setJMenuBar(menuBar);
 
             // Icon bar //

@@ -16,7 +16,6 @@ import org.jd.gui.model.container.DelegatingFilterContainer;
 import org.jd.gui.service.type.TypeFactoryService;
 import org.jd.gui.spi.TypeFactory;
 import org.jd.gui.util.exception.ExceptionUtil;
-import org.jd.gui.util.function.TriConsumer;
 import org.jd.gui.view.SearchInConstantPoolsView;
 
 import javax.swing.*;
@@ -25,7 +24,6 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -38,7 +36,7 @@ public class SearchInConstantPoolsController implements IndexesChangeListener {
 
     protected JFrame mainFrame;
     protected SearchInConstantPoolsView searchInConstantPoolsView;
-    protected Map<String, Map<String, Collection>> cache;
+    protected Map<String, Map<String, Collection<?>>> cache;
     protected Set<DelegatingFilterContainer> delegatingFilterContainers = new HashSet<>();
     protected Collection<Future<Indexes>> collectionOfFutureIndexes;
     protected Consumer<URI> openCallback;
@@ -50,19 +48,15 @@ public class SearchInConstantPoolsController implements IndexesChangeListener {
         this.executor = executor;
         this.mainFrame = mainFrame;
         // Create UI
-        this.searchInConstantPoolsView = new SearchInConstantPoolsView(
+        this.searchInConstantPoolsView = new SearchInConstantPoolsView<>(
             api, mainFrame,
-            new BiConsumer<String, Integer>() {
-                @Override public void accept(String pattern, Integer flags) { updateTree(pattern, flags); }
-            },
-            new TriConsumer<URI, String, Integer>() {
-                @Override public void accept(URI uri, String pattern, Integer flags) { onTypeSelected(uri, pattern, flags); }
-            }
+            (String pattern, Integer flags) -> updateTree(pattern, flags),
+            (URI uri, String pattern, Integer flags) -> onTypeSelected(uri, pattern, flags)
         );
         // Create result cache
-        this.cache = new LinkedHashMap<String, Map<String, Collection>>(CACHE_MAX_ENTRIES*3/2, 0.7f, true) {
+        this.cache = new LinkedHashMap<String, Map<String, Collection<?>>>(CACHE_MAX_ENTRIES*3/2, 0.7f, true) {
             @Override
-            protected boolean removeEldestEntry(Map.Entry<String, Map<String, Collection>> eldest) {
+            protected boolean removeEldestEntry(Map.Entry<String, Map<String, Collection<?>>> eldest) {
                 return size() > CACHE_MAX_ENTRIES;
             }
         };
@@ -279,24 +273,24 @@ public class SearchInConstantPoolsController implements IndexesChangeListener {
 
     @SuppressWarnings("unchecked")
     protected void match(Indexes indexes, String indexName, String pattern,
-                         BiFunction<Character, Map<String, Collection>, Map<String, Collection>> matchWithCharFunction,
-                         BiFunction<String, Map<String, Collection>, Map<String, Collection>> matchWithStringFunction,
+                         BiFunction<Character, Map<String, Collection<?>>, Map<String, Collection<?>>> matchWithCharFunction,
+                         BiFunction<String, Map<String, Collection<?>>, Map<String, Collection<?>>> matchWithStringFunction,
                          Set<Container.Entry> matchingEntries) {
         int patternLength = pattern.length();
 
         if (patternLength > 0) {
             String key = String.valueOf(indexes.hashCode()) + "***" + indexName + "***" + pattern;
-            Map<String, Collection> matchedEntries = cache.get(key);
+            Map<String, Collection<?>> matchedEntries = cache.get(key);
 
             if (matchedEntries == null) {
-                Map<String, Collection> index = indexes.getIndex(indexName);
+                Map<String, Collection<?>> index = indexes.getIndex(indexName);
 
                 if (index != null) {
                     if (patternLength == 1) {
                         matchedEntries = matchWithCharFunction.apply(pattern.charAt(0), index);
                     } else {
                         String lastKey = key.substring(0, key.length() - 1);
-                        Map<String, Collection> lastMatchedTypes = cache.get(lastKey);
+                        Map<String, Collection<?>> lastMatchedTypes = cache.get(lastKey);
                         if (lastMatchedTypes != null) {
                             matchedEntries = matchWithStringFunction.apply(pattern, lastMatchedTypes);
                         } else {
@@ -310,18 +304,20 @@ public class SearchInConstantPoolsController implements IndexesChangeListener {
             }
 
             if (matchedEntries != null) {
-                for (Collection<Container.Entry> entries : matchedEntries.values()) {
-                    matchingEntries.addAll(entries);
+                for (Collection<?> entries : matchedEntries.values()) {
+                    for (Object obj : entries) {
+                        matchingEntries.add((Container.Entry) obj);
+                    }
                 }
             }
         }
     }
 
-    protected static Map<String, Collection> matchTypeEntriesWithChar(char c, Map<String, Collection> index) {
+    protected static Map<String, Collection<?>> matchTypeEntriesWithChar(char c, Map<String, Collection<?>> index) {
         if ((c == '*') || (c == '?')) {
             return index;
         } else {
-            Map<String, Collection> map = new HashMap<>();
+            Map<String, Collection<?>> map = new HashMap<>();
 
             for (String typeName : index.keySet()) {
                 // Search last package separator
@@ -338,9 +334,9 @@ public class SearchInConstantPoolsController implements IndexesChangeListener {
         }
     }
 
-    protected static Map<String, Collection> matchTypeEntriesWithString(String pattern, Map<String, Collection> index) {
+    protected static Map<String, Collection<?>> matchTypeEntriesWithString(String pattern, Map<String, Collection<?>> index) {
         Pattern p = createPattern(pattern);
-        Map<String, Collection> map = new HashMap<>();
+        Map<String, Collection<?>> map = new HashMap<>();
 
         for (String typeName : index.keySet()) {
             // Search last package separator
@@ -356,11 +352,11 @@ public class SearchInConstantPoolsController implements IndexesChangeListener {
         return map;
     }
 
-    protected static Map<String, Collection> matchWithChar(char c, Map<String, Collection> index) {
+    protected static Map<String, Collection<?>> matchWithChar(char c, Map<String, Collection<?>> index) {
         if ((c == '*') || (c == '?')) {
             return index;
         } else {
-            Map<String, Collection> map = new HashMap<>();
+            Map<String, Collection<?>> map = new HashMap<>();
 
             for (String key : index.keySet()) {
                 if (!key.isEmpty() && (key.charAt(0) == c)) {
@@ -372,9 +368,9 @@ public class SearchInConstantPoolsController implements IndexesChangeListener {
         }
     }
 
-    protected static Map<String, Collection> matchWithString(String pattern, Map<String, Collection> index) {
+    protected static Map<String, Collection<?>> matchWithString(String pattern, Map<String, Collection<?>> index) {
         Pattern p = createPattern(pattern);
-        Map<String, Collection> map = new HashMap<>();
+        Map<String, Collection<?>> map = new HashMap<>();
 
         for (String key : index.keySet()) {
             if (p.matcher(key).matches()) {

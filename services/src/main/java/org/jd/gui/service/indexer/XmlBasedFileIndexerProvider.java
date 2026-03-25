@@ -101,11 +101,11 @@ public class XmlBasedFileIndexerProvider extends AbstractIndexerProvider {
             }
         }
 
-        Map<String, Collection> stringIndex = indexes.getIndex("strings");
+        Map<String, Collection<?>> stringIndex = indexes.getIndex("strings");
 
         for (String string : stringSet) {
             if ((string != null) && !string.isEmpty()) {
-                stringIndex.get(string).add(entry);
+                ((Collection<Object>) stringIndex.get(string)).add(entry);
             }
         }
     }

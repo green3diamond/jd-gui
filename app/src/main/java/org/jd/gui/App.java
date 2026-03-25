@@ -11,8 +11,9 @@ import org.jd.gui.controller.MainController;
 import org.jd.gui.model.configuration.Configuration;
 import org.jd.gui.service.configuration.ConfigurationPersister;
 import org.jd.gui.service.configuration.ConfigurationPersisterService;
-import org.jd.gui.util.exception.ExceptionUtil;
 import org.jd.gui.util.net.InterProcessCommunicationUtil;
+
+import com.formdev.flatlaf.FlatLightLaf;
 
 import javax.swing.*;
 import java.io.File;
@@ -46,16 +47,15 @@ public class App {
             }
 
             // Create SwingBuilder, set look and feel
-            try {
-                UIManager.setLookAndFeel(configuration.getLookAndFeel());
-            } catch (Exception e) {
-                configuration.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            FlatLightLaf.setup();
+            String configuredLaf = configuration.getLookAndFeel();
+            if (configuredLaf != null && !configuredLaf.isEmpty()) {
                 try {
-                    UIManager.setLookAndFeel(configuration.getLookAndFeel());
-                } catch (Exception ee) {
-                    assert ExceptionUtil.printStackTrace(ee);
+                    UIManager.setLookAndFeel(configuredLaf);
+                } catch (Exception e) {
+                    // Configured L&F failed; FlatLaf is already active as the default
                 }
-           }
+            }
 
             // Create main controller and show main frame
             controller = new MainController(configuration);

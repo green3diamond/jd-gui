@@ -10,6 +10,7 @@ package org.jd.gui.view.component;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rsyntaxtextarea.folding.FoldManager;
 import org.fife.ui.rtextarea.*;
+import org.fife.ui.rtextarea.FoldIndicatorIcon;
 import org.jd.gui.api.feature.ContentSearchable;
 import org.jd.gui.api.feature.LineNumberNavigable;
 import org.jd.gui.api.feature.PreferencesChangeListener;
@@ -19,6 +20,7 @@ import org.jd.gui.util.exception.ExceptionUtil;
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -33,8 +35,17 @@ import java.util.Map;
 public class AbstractTextPage extends JPanel implements LineNumberNavigable, ContentSearchable, UriOpenable, PreferencesChangeListener {
     protected static final String FONT_SIZE_KEY = "ViewerPreferences.fontSize";
 
-    protected static final ImageIcon COLLAPSED_ICON = new ImageIcon(AbstractTextPage.class.getClassLoader().getResource("org/jd/gui/images/plus.png"));
-    protected static final ImageIcon EXPANDED_ICON = new ImageIcon(AbstractTextPage.class.getClassLoader().getResource("org/jd/gui/images/minus.png"));
+    protected static final FoldIndicatorIcon COLLAPSED_ICON = createFoldIcon("org/jd/gui/images/plus.png", true);
+    protected static final FoldIndicatorIcon EXPANDED_ICON = createFoldIcon("org/jd/gui/images/minus.png", false);
+
+    private static FoldIndicatorIcon createFoldIcon(String resource, boolean collapsed) {
+        ImageIcon img = new ImageIcon(AbstractTextPage.class.getClassLoader().getResource(resource));
+        return new FoldIndicatorIcon(collapsed) {
+            @Override public int getIconWidth() { return img.getIconWidth(); }
+            @Override public int getIconHeight() { return img.getIconHeight(); }
+            @Override public void paintIcon(Component c, Graphics g, int x, int y) { img.paintIcon(c, g, x, y); }
+        };
+    }
 
     protected static final Color DOUBLE_CLICK_HIGHLIGHT_COLOR = new Color(0x66ff66);
     protected static final Color SEARCH_HIGHLIGHT_COLOR = new Color(0xffff66);
@@ -68,9 +79,9 @@ public class AbstractTextPage extends JPanel implements LineNumberNavigable, Con
             }
         });
 
-        KeyStroke ctrlA = KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-        KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
-        KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V, Toolkit.getDefaultToolkit().getMenuShortcutKeyMask());
+        KeyStroke ctrlA = KeyStroke.getKeyStroke(KeyEvent.VK_A, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
+        KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_C, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
+        KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx());
         InputMap inputMap = textArea.getInputMap();
         inputMap.put(ctrlA, "none");
         inputMap.put(ctrlC, "none");
@@ -95,10 +106,10 @@ public class AbstractTextPage extends JPanel implements LineNumberNavigable, Con
         }
 
         scrollPane.addMouseWheelListener(e -> {
-            if ((e.getModifiers() & (Event.META_MASK|Event.CTRL_MASK)) != 0) {
+            if ((e.getModifiersEx() & (InputEvent.META_DOWN_MASK|InputEvent.CTRL_DOWN_MASK)) != 0) {
                 int x = e.getX() + scrollPane.getX() - textArea.getX();
                 int y = e.getY() + scrollPane.getY() - textArea.getY();
-                int offset = textArea.viewToModel(new Point(x, y));
+                int offset = textArea.viewToModel2D(new Point(x, y));
 
                 // Update font size
                 if (e.getWheelRotation() > 0) {
@@ -113,7 +124,7 @@ public class AbstractTextPage extends JPanel implements LineNumberNavigable, Con
                 }
 
                 try {
-                    Rectangle newRectangle = textArea.modelToView(offset);
+                    Rectangle newRectangle = textArea.modelToView2D(offset).getBounds();
                     int newY = newRectangle.y + (newRectangle.height >> 1);
 
                     // Scroll
@@ -171,7 +182,7 @@ public class AbstractTextPage extends JPanel implements LineNumberNavigable, Con
 
         if (!foldsExpanded) {
             try {
-                Rectangle rec = textArea.modelToView(start);
+                Rectangle rec = textArea.modelToView2D(start).getBounds();
 
                 if (rec != null) {
                     // Visible
@@ -180,7 +191,7 @@ public class AbstractTextPage extends JPanel implements LineNumberNavigable, Con
                     // Not visible yet
                     SwingUtilities.invokeLater(() -> {
                         try {
-                            Rectangle r = textArea.modelToView(start);
+                            Rectangle r = textArea.modelToView2D(start).getBounds();
                             if (r != null) {
                                 setCaretPositionAndCenter(start, end, r);
                             }
@@ -198,7 +209,7 @@ public class AbstractTextPage extends JPanel implements LineNumberNavigable, Con
     protected void setCaretPositionAndCenter(int start, int end, Rectangle r) {
         if (end != start) {
             try {
-                r = r.union(textArea.modelToView(end));
+                r = r.union(textArea.modelToView2D(end).getBounds());
             } catch (BadLocationException e) {
                 assert ExceptionUtil.printStackTrace(e);
             }

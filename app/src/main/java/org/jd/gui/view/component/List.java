@@ -21,9 +21,9 @@ public class List extends JList {
         super();
 
         Toolkit toolkit = Toolkit.getDefaultToolkit();
-        KeyStroke ctrlA = KeyStroke.getKeyStroke(KeyEvent.VK_A, toolkit.getMenuShortcutKeyMask());
-        KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_C, toolkit.getMenuShortcutKeyMask());
-        KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V, toolkit.getMenuShortcutKeyMask());
+        KeyStroke ctrlA = KeyStroke.getKeyStroke(KeyEvent.VK_A, toolkit.getMenuShortcutKeyMaskEx());
+        KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_C, toolkit.getMenuShortcutKeyMaskEx());
+        KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V, toolkit.getMenuShortcutKeyMaskEx());
 
         InputMap inputMap = getInputMap();
         inputMap.put(ctrlA, "none");
@@ -33,7 +33,7 @@ public class List extends JList {
         setCellRenderer(new Renderer());
     }
 
-    protected class Renderer implements ListCellRenderer {
+    protected class Renderer implements ListCellRenderer<Object> {
         protected Color textSelectionColor;
         protected Color backgroundSelectionColor;
         protected Color textNonSelectionColor;

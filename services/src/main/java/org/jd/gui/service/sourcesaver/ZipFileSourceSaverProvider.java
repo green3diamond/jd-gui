@@ -28,7 +28,14 @@ public class ZipFileSourceSaverProvider extends DirectorySourceSaverProvider {
     public void save(API api, SourceSaver.Controller controller, SourceSaver.Listener listener, Path rootPath, Container.Entry entry) {
         try {
             String sourcePath = getSourcePath(entry);
-            Path path = rootPath.resolve(sourcePath);
+            Path path = rootPath.resolve(sourcePath).normalize();
+
+            // Path traversal protection: ensure resolved path stays within rootPath
+            if (!path.startsWith(rootPath.normalize())) {
+                throw new SecurityException(
+                    "Path traversal detected: resolved path escapes the root directory: " + sourcePath);
+            }
+
             Path parentPath = path.getParent();
 
             if ((parentPath != null) && !Files.exists(parentPath)) {

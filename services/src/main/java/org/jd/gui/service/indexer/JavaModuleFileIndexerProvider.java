@@ -23,7 +23,7 @@ public class JavaModuleFileIndexerProvider extends AbstractIndexerProvider {
     public void index(API api, Container.Entry entry, Indexes indexes) {
         for (Container.Entry e : entry.getChildren()) {
             if (e.isDirectory() && e.getPath().equals("classes")) {
-                Map<String, Collection> packageDeclarationIndex = indexes.getIndex("packageDeclarations");
+                Map<String, Collection<?>> packageDeclarationIndex = indexes.getIndex("packageDeclarations");
 
                 // Index module-info, packages and CLASS files
                 index(api, e, indexes, packageDeclarationIndex);
@@ -33,13 +33,13 @@ public class JavaModuleFileIndexerProvider extends AbstractIndexerProvider {
     }
 
     @SuppressWarnings("unchecked")
-    protected static void index(API api, Container.Entry entry, Indexes indexes, Map<String, Collection> packageDeclarationIndex) {
+    protected static void index(API api, Container.Entry entry, Indexes indexes, Map<String, Collection<?>> packageDeclarationIndex) {
         for (Container.Entry e : entry.getChildren()) {
             if (e.isDirectory()) {
                 String path = e.getPath();
 
                 if (!path.startsWith("classes/META-INF")) {
-                    packageDeclarationIndex.get(path.substring(8)).add(e); // 8 = "classes/".length()
+                    ((Collection<Object>) packageDeclarationIndex.get(path.substring(8))).add(e); // 8 = "classes/".length()
                 }
 
                 index(api, e, indexes, packageDeclarationIndex);

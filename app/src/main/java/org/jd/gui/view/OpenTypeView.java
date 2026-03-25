@@ -248,7 +248,7 @@ public class OpenTypeView {
                 Point listLocation = openTypeList.getLocationOnScreen();
                 Rectangle cellBound = openTypeList.getCellBounds(index, index);
                 Point leftBottom = new Point(listLocation.x + cellBound.x, listLocation.y + cellBound.y + cellBound.height);
-                selectedTypeCallback.accept(leftBottom, selectedCellBean.entries, selectedCellBean.typeName);
+                selectedTypeCallback.accept(leftBottom, selectedCellBean.entries(), selectedCellBean.typeName());
             }
         });
     }

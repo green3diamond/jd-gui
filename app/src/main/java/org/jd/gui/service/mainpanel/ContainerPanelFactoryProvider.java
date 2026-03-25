@@ -66,7 +66,7 @@ public class ContainerPanelFactoryProvider implements PanelFactory {
         // --- ContentIndexable --- //
         @Override
         public Indexes index(API api) {
-            HashMap<String, Map<String, Collection>> map = new HashMap<>();
+            HashMap<String, Map<String, Collection<?>>> map = new HashMap<>();
             DelegatedMapMapWithDefault mapWithDefault = new DelegatedMapMapWithDefault(map);
 
             // Index populating value automatically
@@ -154,30 +154,30 @@ public class ContainerPanelFactoryProvider implements PanelFactory {
         @Override public int hashCode() { return map.hashCode(); }
     }
 
-    protected static class DelegatedMapWithDefault extends DelegatedMap<String, Collection> {
-        public DelegatedMapWithDefault(Map<String, Collection> map) { super(map); }
+    protected static class DelegatedMapWithDefault extends DelegatedMap<String, Collection<?>> {
+        public DelegatedMapWithDefault(Map<String, Collection<?>> map) { super(map); }
 
-        @Override public Collection get(Object o) {
-            Collection value = map.get(o);
+        @Override public Collection<?> get(Object o) {
+            Collection<?> value = map.get(o);
             if (value == null) {
                 String key = o.toString();
-                map.put(key, value=new ArrayList());
+                map.put(key, value = new ArrayList<>());
             }
             return value;
         }
     }
 
-    protected static class DelegatedMapMapWithDefault extends DelegatedMap<String, Map<String, Collection>> {
-	    protected HashMap<String, Map<String, Collection>> wrappers = new HashMap<>();
+    protected static class DelegatedMapMapWithDefault extends DelegatedMap<String, Map<String, Collection<?>>> {
+	    protected HashMap<String, Map<String, Collection<?>>> wrappers = new HashMap<>();
 
-        public DelegatedMapMapWithDefault(Map<String, Map<String, Collection>> map) { super(map); }
+        public DelegatedMapMapWithDefault(Map<String, Map<String, Collection<?>>> map) { super(map); }
 
-        @Override public Map<String, Collection> get(Object o) {
-            Map<String, Collection> value = wrappers.get(o);
+        @Override public Map<String, Collection<?>> get(Object o) {
+            Map<String, Collection<?>> value = wrappers.get(o);
 
             if (value == null) {
                 String key = o.toString();
-                HashMap<String, Collection> m = new HashMap<>();
+                HashMap<String, Collection<?>> m = new HashMap<>();
                 map.put(key, m);
                 wrappers.put(key, value=new DelegatedMapWithDefault(m));
             }

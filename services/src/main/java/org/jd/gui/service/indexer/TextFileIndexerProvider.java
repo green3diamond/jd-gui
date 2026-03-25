@@ -12,6 +12,8 @@ import org.jd.gui.api.model.Container;
 import org.jd.gui.api.model.Indexes;
 import org.jd.gui.util.io.TextReader;
 
+import java.util.Collection;
+
 public class TextFileIndexerProvider extends AbstractIndexerProvider {
 
     @Override public String[] getSelectors() {
@@ -24,6 +26,6 @@ public class TextFileIndexerProvider extends AbstractIndexerProvider {
     @Override
     @SuppressWarnings("unchecked")
     public void index(API api, Container.Entry entry, Indexes indexes) {
-        indexes.getIndex("strings").get(TextReader.getText(entry.getInputStream())).add(entry);
+        ((Collection<Object>) indexes.getIndex("strings").get(TextReader.getText(entry.getInputStream()))).add(entry);
     }
 }

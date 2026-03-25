@@ -57,10 +57,10 @@ public class OpenTypeListCellRenderer implements ListCellRenderer<OpenTypeListCe
     public Component getListCellRendererComponent(JList<? extends OpenTypeListCellBean> list, OpenTypeListCellBean value, int index, boolean selected, boolean hasFocus) {
         if (value != null) {
             // Display first level item
-            label.setText(value.label);
-            label.setIcon(value.icon);
+            label.setText(value.label());
+            label.setIcon(value.icon());
 
-            info.setText((value.packag != null) ? " - "+value.packag : "");
+            info.setText((value.packag() != null) ? " - "+value.packag() : "");
 
             if (selected) {
                 label.setForeground(textSelectionColor);

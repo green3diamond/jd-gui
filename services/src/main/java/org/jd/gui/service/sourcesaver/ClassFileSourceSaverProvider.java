@@ -56,7 +56,13 @@ public class ClassFileSourceSaverProvider extends AbstractSourceSaverProvider {
     @Override
     public void save(API api, Controller controller, Listener listener, Path rootPath, Container.Entry entry) {
         String sourcePath = getSourcePath(entry);
-        Path path = rootPath.resolve(sourcePath);
+        Path path = rootPath.resolve(sourcePath).normalize();
+
+        // Path traversal protection: ensure resolved path stays within rootPath
+        if (!path.startsWith(rootPath.normalize())) {
+            throw new SecurityException(
+                "Path traversal detected: resolved path escapes the root directory: " + sourcePath);
+        }
 
         saveContent(api, controller, listener, rootPath, path, entry);
     }

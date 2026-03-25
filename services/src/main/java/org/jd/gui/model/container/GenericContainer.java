@@ -101,6 +101,17 @@ public class GenericContainer implements Container {
                         strPath = strPath.substring(0, strPathLength-1);
                     }
                 }
+
+                // Path traversal protection: reject paths that attempt to escape
+                // the root directory (e.g., malicious zip entries like "../../etc/passwd")
+                if (strPath.contains("..")) {
+                    String normalized = java.nio.file.Paths.get(strPath).normalize().toString();
+                    if (normalized.startsWith("..") || normalized.startsWith("/")) {
+                        throw new SecurityException(
+                            "Path traversal detected: entry path '" + strPath + "' escapes the root directory");
+                    }
+                    strPath = normalized.replace("\\", "/");
+                }
             }
             return strPath;
         }
@@ -170,7 +181,7 @@ public class GenericContainer implements Container {
             tmpFile.deleteOnExit();
             Files.copy(fsPath, tmpPath);
 
-            FileSystem subFileSystem = FileSystems.newFileSystem(tmpPath, null);
+            FileSystem subFileSystem = FileSystems.newFileSystem(tmpPath, (ClassLoader) null);
 
             if (subFileSystem != null) {
                 Iterator<Path> rootDirectories = subFileSystem.getRootDirectories().iterator();

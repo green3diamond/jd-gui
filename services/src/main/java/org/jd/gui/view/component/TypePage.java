@@ -60,7 +60,7 @@ public abstract class TypePage extends CustomLineNumbersPage implements UriGetta
             try {
                 // Save current position in history
                 Point location = textArea.getLocationOnScreen();
-                int offset = textArea.viewToModel(new Point(x - location.x, y - location.y));
+                int offset = textArea.viewToModel2D(new Point(x - location.x, y - location.y));
                 URI uri = entry.getUri();
                 api.addURI(new URI(uri.getScheme(), uri.getAuthority(), uri.getPath(), "position=" + offset, null));
 
@@ -349,7 +349,7 @@ public abstract class TypePage extends CustomLineNumbersPage implements UriGetta
                 try {
                     for (Future<Indexes> futureIndexes : collectionOfFutureIndexes) {
                         if (futureIndexes.isDone()) {
-                            Map<String, Collection> index = futureIndexes.get().getIndex("typeDeclarations");
+                            Map<String, Collection<?>> index = futureIndexes.get().getIndex("typeDeclarations");
                             if ((index != null) && (index.get(typeName) != null)) {
                                 enabled = true;
                                 break;
@@ -395,9 +395,10 @@ public abstract class TypePage extends CustomLineNumbersPage implements UriGetta
         try {
             for (Future<Indexes> futureIndexes : collectionOfFutureIndexes) {
                 if (futureIndexes.isDone()) {
-                    Map<String, Collection> index = futureIndexes.get().getIndex("typeDeclarations");
+                    Map<String, Collection<?>> index = futureIndexes.get().getIndex("typeDeclarations");
                     if (index != null) {
-                        Collection<Container.Entry> collection = index.get(typeName);
+                        @SuppressWarnings("unchecked")
+                        Collection<Container.Entry> collection = (Collection<Container.Entry>) index.get(typeName);
                         if (collection != null) {
                             entries.addAll(collection);
                         }

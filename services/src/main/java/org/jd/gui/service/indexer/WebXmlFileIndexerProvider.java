@@ -30,7 +30,7 @@ public class WebXmlFileIndexerProvider extends XmlBasedFileIndexerProvider {
 
     protected static class WebXmlPathFinder extends AbstractXmlPathFinder {
         Container.Entry entry;
-        Map<String, Collection> index;
+        Map<String, Collection<?>> index;
 
         public WebXmlPathFinder(Container.Entry entry, Indexes indexes) {
             super(Arrays.asList(
@@ -45,7 +45,7 @@ public class WebXmlFileIndexerProvider extends XmlBasedFileIndexerProvider {
         @Override
         @SuppressWarnings("unchecked")
         public void handle(String path, String text, int position) {
-            index.get(text.replace(".", "/")).add(entry);
+            ((Collection<Object>) index.get(text.replace(".", "/"))).add(entry);
         }
     }
 }

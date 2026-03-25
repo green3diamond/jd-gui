@@ -11,6 +11,7 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.Token;
 
 import java.awt.*;
+import java.awt.event.InputEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Map;
@@ -29,8 +30,8 @@ public abstract class HyperlinkPage extends TextPage {
             int lastModifiers = -1;
 
             public void mouseClicked(MouseEvent e) {
-                if ((e.getClickCount() == 1) && ((e.getModifiers() & (Event.ALT_MASK|Event.META_MASK|Event.SHIFT_MASK)) == 0)) {
-                    int offset = textArea.viewToModel(new Point(e.getX(), e.getY()));
+                if ((e.getClickCount() == 1) && ((e.getModifiersEx() & (InputEvent.ALT_DOWN_MASK|InputEvent.META_DOWN_MASK|InputEvent.SHIFT_DOWN_MASK)) == 0)) {
+                    int offset = textArea.viewToModel2D(new Point(e.getX(), e.getY()));
                     if (offset != -1) {
                         Map.Entry<Integer, HyperlinkData> entry = hyperlinks.floorEntry(offset);
                         if (entry != null) {
@@ -44,13 +45,13 @@ public abstract class HyperlinkPage extends TextPage {
             }
 
             public void mouseMoved(MouseEvent e) {
-                if ((e.getX() != lastX) || (e.getY() != lastY) || (lastModifiers != e.getModifiers())) {
+                if ((e.getX() != lastX) || (e.getY() != lastY) || (lastModifiers != e.getModifiersEx())) {
                     lastX = e.getX();
                     lastY = e.getY();
-                    lastModifiers = e.getModifiers();
+                    lastModifiers = e.getModifiersEx();
 
-                    if ((e.getModifiers() & (Event.ALT_MASK|Event.META_MASK|Event.SHIFT_MASK)) == 0) {
-                        int offset = textArea.viewToModel(new Point(e.getX(), e.getY()));
+                    if ((e.getModifiersEx() & (InputEvent.ALT_DOWN_MASK|InputEvent.META_DOWN_MASK|InputEvent.SHIFT_DOWN_MASK)) == 0) {
+                        int offset = textArea.viewToModel2D(new Point(e.getX(), e.getY()));
                         if (offset != -1) {
                             Map.Entry<Integer, HyperlinkData> entry = hyperlinks.floorEntry(offset);
                             if (entry != null) {

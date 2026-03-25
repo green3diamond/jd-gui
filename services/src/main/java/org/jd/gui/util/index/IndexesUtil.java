@@ -31,7 +31,7 @@ public class IndexesUtil {
         try {
             for (Future<Indexes> futureIndexes : collectionOfFutureIndexes) {
                 if (futureIndexes.isDone()) {
-                    Map<String, Collection> index = futureIndexes.get().getIndex(indexName);
+                    Map<String, Collection<?>> index = futureIndexes.get().getIndex(indexName);
                     if ((index != null) && (index.get(key) != null)) {
                         return true;
                     }
@@ -51,9 +51,10 @@ public class IndexesUtil {
         try {
             for (Future<Indexes> futureIndexes : collectionOfFutureIndexes) {
                 if (futureIndexes.isDone()) {
-                    Map<String, Collection> index = futureIndexes.get().getIndex(indexName);
+                    Map<String, Collection<?>> index = futureIndexes.get().getIndex(indexName);
                     if (index != null) {
-                        Collection<Container.Entry> collection = index.get(key);
+                        @SuppressWarnings("unchecked")
+                        Collection<Container.Entry> collection = (Collection<Container.Entry>) index.get(key);
                         if (collection != null) {
                             entries.addAll(collection);
                         }
