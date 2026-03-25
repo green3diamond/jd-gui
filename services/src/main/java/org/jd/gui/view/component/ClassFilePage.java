@@ -9,7 +9,7 @@ package org.jd.gui.view.component;
 
 import org.fife.ui.rsyntaxtextarea.DocumentRange;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.jd.core.v1.ClassFileToJavaSourceDecompiler;
+import org.jd.core.v1.service.converter.classfiletojavasource.ClassFileToJavaSourceDecompiler;
 import org.jd.gui.api.API;
 import org.jd.gui.api.model.Container;
 import org.jd.gui.util.decompiler.*;
